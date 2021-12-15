@@ -14,7 +14,7 @@ class RestApi(object):
 
     def __check_deep(self, retry):
         if retry < 0:
-            return Exception("Deep lost")
+            raise Exception("Deep lost")
 
     # ใช้สำหรับขอ token จาก user
     # return token
@@ -29,7 +29,7 @@ class RestApi(object):
             token = response.json()["token"]
             return token
         else:
-            return Exception(api_url + " code " + str(status))
+            raise Exception(api_url + " code " + str(status))
 
     # ตรวจสอบว่า Token ยังใช้งานได้อยู่หรือไม่
     # return bool
@@ -65,7 +65,7 @@ class RestApi(object):
             self.__auth()
             return self.__list_file(dir_parth, retry - 1)
         else:
-            return Exception(api_url + " code " + str(status))
+            raise Exception(api_url + " code " + str(status))
 
     def list_file(self, dir_parth):
         return self.__list_file(dir_parth, 5)
@@ -80,7 +80,7 @@ class RestApi(object):
         response = requests.request("PUT", api_url, headers=headers, data=payload)
         status = response.status_code
         # if status != 200:
-        #    return Exception(api_url + " code " + str(status))
+        #    raise Exception(api_url + " code " + str(status))
 
         if status == 401:
             self.__auth()
@@ -135,7 +135,7 @@ class RestApi(object):
             self.__delete(dir_or_file_parth, retry - 1)
         elif status == 500:
             # 500 มีไฟล์หรือ โฟเดอร์อยู่ ไม่สามารถลบได้
-            return Exception(api_url + " code " + str(status))
+            raise Exception(api_url + " code " + str(status))
 
         elif status == 200:
             # ไม่มีไฟล์ 200 และ {"boolean": false}
