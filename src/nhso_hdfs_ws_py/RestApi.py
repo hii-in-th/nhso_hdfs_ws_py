@@ -12,8 +12,8 @@ class RestApi(object):
         self.password = password
         self.token = ""
 
-    def __check_deep(self, deep):
-        if deep < 0:
+    def __check_deep(self, retry):
+        if retry < 0:
             return Exception("Deep lost")
 
     # ใช้สำหรับขอ token จาก user
@@ -51,10 +51,10 @@ class RestApi(object):
             self.token = self.__auth_core()
 
     # return list
-    def __list_file(self, dir_parth, deep=3):
-        self.__check_deep(deep)
+    def __list_file(self, dir_parth, retry=3):
+        self.__check_deep(retry)
         api_url = self.base_url + "/v1/" + dir_parth + "?op=LISTSTATUS"
-        print(api_url + " deep:" + deep)
+        print(api_url + " deep:" + retry)
         payload = {}
         headers = {"Authorization": "JWT " + self.token}
         response = requests.request("GET", api_url, headers=headers, data=payload)
@@ -63,7 +63,7 @@ class RestApi(object):
             return response.json()
         elif status == 401:
             self.__auth()
-            return self.__list_file(dir_parth, deep - 1)
+            return self.__list_file(dir_parth, retry - 1)
         else:
             return Exception(api_url + " code " + str(status))
 
@@ -71,10 +71,10 @@ class RestApi(object):
         return self.__list_file(dir_parth, 5)
 
     # mkdir -p no ruturn
-    def __mkdirs(self, dir_parth, deep=3):
-        self.__check_deep(deep)
+    def __mkdirs(self, dir_parth, retry=3):
+        self.__check_deep(retry)
         api_url = self.base_url + "/v1/" + dir_parth + "?op=MKDIRS"
-        print(api_url + " deep:" + deep)
+        print(api_url + " deep:" + retry)
         payload = {}
         headers = {"Authorization": "JWT " + self.token}
         response = requests.request("PUT", api_url, headers=headers, data=payload)
@@ -84,7 +84,7 @@ class RestApi(object):
 
         if status == 401:
             self.__auth()
-            self.__mkdirs(dir_parth, deep - 1)
+            self.__mkdirs(dir_parth, retry - 1)
 
     def mkdirs(self, dir_parth):
         self.__mkdirs(dir_parth, 5)
@@ -100,8 +100,8 @@ class RestApi(object):
             print("Check exists file false")
             return False
 
-    def __move_file_and_rename(self, source_path, destination_path, deep=3):
-        self.__check_deep(deep)
+    def __move_file_and_rename(self, source_path, destination_path, retry=3):
+        self.__check_deep(retry)
         api_url = (
             self.base_url
             + "/v1/"
@@ -109,22 +109,22 @@ class RestApi(object):
             + "?op=RENAME&destination=/"
             + destination_path
         )
-        print(api_url + " deep:" + deep)
+        print(api_url + " deep:" + retry)
         payload = {}
         headers = {"Authorization": "JWT " + self.token}
         response = requests.request("PUT", api_url, headers=headers, data=payload)
         status = response.status_code
         if status == 401:
             self.__auth()
-            self.__move_file_and_rename(source_path, destination_path, deep - 1)
+            self.__move_file_and_rename(source_path, destination_path, retry - 1)
 
     def move_file_and_rename(self, source_path, destination_path):
         self.__move_file_and_rename(source_path, destination_path, 5)
 
-    def __delete(self, dir_or_file_parth, deep=3):
-        self.__check_deep(deep)
+    def __delete(self, dir_or_file_parth, retry=3):
+        self.__check_deep(retry)
         api_url = self.base_url + "/v1/" + dir_or_file_parth + "?op=DELETE"
-        print(api_url + " deep:" + deep)
+        print(api_url + " deep:" + retry)
         payload = {}
         headers = {"Authorization": "JWT " + self.token}
         response = requests.request("DELETE", api_url, headers=headers, data=payload)
@@ -132,7 +132,7 @@ class RestApi(object):
         if status == 401:
             # 401 Un
             self.__auth()
-            self.__delete(dir_or_file_parth, deep - 1)
+            self.__delete(dir_or_file_parth, retry - 1)
         elif status == 500:
             # 500 มีไฟล์หรือ โฟเดอร์อยู่ ไม่สามารถลบได้
             return Exception(api_url + " code " + str(status))
@@ -148,11 +148,11 @@ class RestApi(object):
         p = re.compile("/?.+/(.+)$")
         return p.match(full_parth).groups()[0]
 
-    def __upload_and_overwrite(self, local_file_path, nhso_file_path, deep=3):
-        self.__check_deep(deep)
+    def __upload_and_overwrite(self, local_file_path, nhso_file_path, retry=3):
+        self.__check_deep(retry)
         self.__auth()  # ใส่ไว้เลย เพราะเป็น fun ที่ช้า
         api_url = self.base_url + "/v1/" + nhso_file_path + "?op=CREATE"
-        print(api_url + " deep:" + deep)
+        print(api_url + " deep:" + retry)
         filename = self.__get_file_name(nhso_file_path)
         payload = {}
         headers = {"Authorization": "JWT " + self.token}
@@ -173,7 +173,7 @@ class RestApi(object):
         if status == 401:
             # 401 Un
             self.__auth()
-            self.__upload_and_overwrite(local_file_path, nhso_file_path, deep - 1)
+            self.__upload_and_overwrite(local_file_path, nhso_file_path, retry - 1)
 
     def upload_and_overwrite(self, local_file_path, nhso_file_path):
         self.__upload_and_overwrite(local_file_path, nhso_file_path, 3)
