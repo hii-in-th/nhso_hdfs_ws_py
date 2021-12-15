@@ -153,7 +153,7 @@ class RestApi(object):
         self.__auth()  # ใส่ไว้เลย เพราะเป็น fun ที่ช้า
         api_url = self.base_url + "/v1/" + nhso_file_path + "?op=CREATE"
         print(api_url + " deep:" + str(retry))
-        filename = self.__get_file_name(nhso_file_path)
+        filename = self.__get_file_name(local_file_path)
         payload = {}
         headers = {"Authorization": "JWT " + self.token}
         files = [
