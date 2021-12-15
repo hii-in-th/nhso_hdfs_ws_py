@@ -54,7 +54,7 @@ class RestApi(object):
     def __list_file(self, dir_parth, retry=3):
         self.__check_deep(retry)
         api_url = self.base_url + "/v1/" + dir_parth + "?op=LISTSTATUS"
-        print(api_url + " deep:" + retry)
+        print(api_url + " deep:" + str(retry))
         payload = {}
         headers = {"Authorization": "JWT " + self.token}
         response = requests.request("GET", api_url, headers=headers, data=payload)
@@ -74,7 +74,7 @@ class RestApi(object):
     def __mkdirs(self, dir_parth, retry=3):
         self.__check_deep(retry)
         api_url = self.base_url + "/v1/" + dir_parth + "?op=MKDIRS"
-        print(api_url + " deep:" + retry)
+        print(api_url + " deep:" + str(retry))
         payload = {}
         headers = {"Authorization": "JWT " + self.token}
         response = requests.request("PUT", api_url, headers=headers, data=payload)
@@ -109,7 +109,7 @@ class RestApi(object):
             + "?op=RENAME&destination=/"
             + destination_path
         )
-        print(api_url + " deep:" + retry)
+        print(api_url + " deep:" + str(retry))
         payload = {}
         headers = {"Authorization": "JWT " + self.token}
         response = requests.request("PUT", api_url, headers=headers, data=payload)
@@ -124,7 +124,7 @@ class RestApi(object):
     def __delete(self, dir_or_file_parth, retry=3):
         self.__check_deep(retry)
         api_url = self.base_url + "/v1/" + dir_or_file_parth + "?op=DELETE"
-        print(api_url + " deep:" + retry)
+        print(api_url + " deep:" + str(retry))
         payload = {}
         headers = {"Authorization": "JWT " + self.token}
         response = requests.request("DELETE", api_url, headers=headers, data=payload)
@@ -152,7 +152,7 @@ class RestApi(object):
         self.__check_deep(retry)
         self.__auth()  # ใส่ไว้เลย เพราะเป็น fun ที่ช้า
         api_url = self.base_url + "/v1/" + nhso_file_path + "?op=CREATE"
-        print(api_url + " deep:" + retry)
+        print(api_url + " deep:" + str(retry))
         filename = self.__get_file_name(nhso_file_path)
         payload = {}
         headers = {"Authorization": "JWT " + self.token}
