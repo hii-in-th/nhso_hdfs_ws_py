@@ -16,6 +16,30 @@ class RestApi(object):
         if retry < 0:
             raise Exception("Deep lost")
 
+    def __request_retry(self, http_method, url, headers, data, retry=5):
+        try:
+            return requests.request(http_method, url, headers=headers, data=data)
+        except Exception as ex:
+            if retry <= 0:
+                raise ex
+            else:
+                print("Req retry " + str(retry) + " " + url)
+                return self.__request_retry(http_method, url, headers, data, retry - 1)
+
+    def __request_retry_file(self, http_method, url, headers, data, file, retry=5):
+        try:
+            return requests.request(
+                http_method, url, headers=headers, data=data, files=file
+            )
+        except Exception as ex:
+            if retry <= 0:
+                raise ex
+            else:
+                print("Req retry " + str(retry) + " " + url)
+                return self.__request_retry_file(
+                    http_method, url, headers, data, file, retry - 1
+                )
+
     # ใช้สำหรับขอ token จาก user
     # return token
     def __auth_core(self):
@@ -23,7 +47,7 @@ class RestApi(object):
         print(api_url)
         payload = json.dumps({"username": self.username, "password": self.password})
         headers = {"Content-Type": "application/json"}
-        response = requests.request("POST", api_url, headers=headers, data=payload)
+        response = self.__request_retry("POST", api_url, headers=headers, data=payload)
         status = response.status_code
         if status == 200:
             token = response.json()["token"]
@@ -37,7 +61,7 @@ class RestApi(object):
         api_url = self.base_url + "/auth-jwt-verify"
         payload = json.dumps({"token": self.token})
         headers = {"Content-Type": "application/json"}
-        response = requests.request("POST", api_url, headers=headers, data=payload)
+        response = self.__request_retry("POST", api_url, headers=headers, data=payload)
         status = response.status_code
         print(api_url + " status code " + str(status))
         if status == 200:
@@ -57,7 +81,7 @@ class RestApi(object):
         print(api_url + " deep:" + str(retry))
         payload = {}
         headers = {"Authorization": "JWT " + self.token}
-        response = requests.request("GET", api_url, headers=headers, data=payload)
+        response = self.__request_retry("GET", api_url, headers=headers, data=payload)
         status = response.status_code
         if status == 200:
             return response.json()
@@ -77,7 +101,7 @@ class RestApi(object):
         print(api_url + " deep:" + str(retry))
         payload = {}
         headers = {"Authorization": "JWT " + self.token}
-        response = requests.request("PUT", api_url, headers=headers, data=payload)
+        response = self.__request_retry("PUT", api_url, headers=headers, data=payload)
         status = response.status_code
         # if status != 200:
         #    raise Exception(api_url + " code " + str(status))
@@ -112,7 +136,7 @@ class RestApi(object):
         print(api_url + " deep:" + str(retry))
         payload = {}
         headers = {"Authorization": "JWT " + self.token}
-        response = requests.request("PUT", api_url, headers=headers, data=payload)
+        response = self.__request_retry("PUT", api_url, headers=headers, data=payload)
         status = response.status_code
         if status == 401:
             self.__auth()
@@ -127,7 +151,9 @@ class RestApi(object):
         print(api_url + " deep:" + str(retry))
         payload = {}
         headers = {"Authorization": "JWT " + self.token}
-        response = requests.request("DELETE", api_url, headers=headers, data=payload)
+        response = self.__request_retry(
+            "DELETE", api_url, headers=headers, data=payload
+        )
         status = response.status_code
         if status == 401:
             # 401 Un
@@ -166,7 +192,7 @@ class RestApi(object):
                 ),
             )
         ]
-        response = requests.request(
+        response = self.__request_retry_file(
             "PUT", api_url, headers=headers, data=payload, files=files
         )
         status = response.status_code
