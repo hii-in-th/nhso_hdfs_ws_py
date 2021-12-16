@@ -193,7 +193,7 @@ class RestApi(object):
             )
         ]
         response = self.__request_retry_file(
-            "PUT", api_url, headers=headers, data=payload, files=files
+            "PUT", api_url, headers=headers, data=payload, file=files
         )
         status = response.status_code
         if status == 401:
