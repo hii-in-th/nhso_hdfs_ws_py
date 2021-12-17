@@ -4,7 +4,7 @@ import re
 
 
 class RestApi(object):
-    # url example http://aaa.co.com/webhdfs
+    # base_url example http://aaa.co.com/webhdfs
     def __init__(self, base_url, username, password):
         self.name = "nhso core api" + base_url
         self.base_url = base_url
@@ -12,10 +12,11 @@ class RestApi(object):
         self.password = password
         self.token = ""
 
-    def __check_deep(self, retry):
+    def __check_over_retry(self, retry):
         if retry < 0:
-            raise Exception("Deep lost")
+            raise Exception("Retry lost")
 
+    # ถ้ามี error ให้ลองใหม่ ตามจำนวน retry
     def __request_retry(self, http_method, url, headers, data, retry=5):
         try:
             return requests.request(http_method, url, headers=headers, data=data)
@@ -26,6 +27,7 @@ class RestApi(object):
                 print("Req retry " + str(retry) + " " + url)
                 return self.__request_retry(http_method, url, headers, data, retry - 1)
 
+    # ถ้ามี error ให้ลองใหม่ ตามจำนวน retry
     def __request_retry_file(self, http_method, url, headers, data, file, retry=5):
         try:
             return requests.request(
@@ -69,14 +71,15 @@ class RestApi(object):
         else:
             return False
 
+    # จะทำการตรวจสอบ verify ก่อน ว่าผ่านไหม ถ้าไม่ผ่านจะเข้าสู่การขอ token ใหม่
     def __auth(self):
         verify = self.__verify_token_core()
         if verify == False:
             self.token = self.__auth_core()
 
-    # return list
+    # แสดงรายการไฟล์
     def __list_file(self, dir_parth, retry=3):
-        self.__check_deep(retry)
+        self.__check_over_retry(retry)
         api_url = self.base_url + "/v1/" + dir_parth + "?op=LISTSTATUS"
         print(api_url + " deep:" + str(retry))
         payload = {}
@@ -94,9 +97,9 @@ class RestApi(object):
     def list_file(self, dir_parth):
         return self.__list_file(dir_parth, 5)
 
-    # mkdir -p no ruturn
+    # สร้างโฟเดอร์แบบคำสั่ง mkdir -p โดยที่จะไม่มี ruturn
     def __mkdirs(self, dir_parth, retry=3):
-        self.__check_deep(retry)
+        self.__check_over_retry(retry)
         api_url = self.base_url + "/v1/" + dir_parth + "?op=MKDIRS"
         print(api_url + " deep:" + str(retry))
         payload = {}
@@ -125,7 +128,7 @@ class RestApi(object):
             return False
 
     def __move_file_and_rename(self, source_path, destination_path, retry=3):
-        self.__check_deep(retry)
+        self.__check_over_retry(retry)
         api_url = (
             self.base_url
             + "/v1/"
@@ -146,7 +149,7 @@ class RestApi(object):
         self.__move_file_and_rename(source_path, destination_path, 5)
 
     def __delete(self, dir_or_file_parth, retry=3):
-        self.__check_deep(retry)
+        self.__check_over_retry(retry)
         api_url = self.base_url + "/v1/" + dir_or_file_parth + "?op=DELETE"
         print(api_url + " deep:" + str(retry))
         payload = {}
@@ -170,12 +173,14 @@ class RestApi(object):
     def delete(self, dir_or_file_parth):
         self.__delete(dir_or_file_parth)
 
+    # แยกชื่อไฟล์ออกมาจาก นามสกุลไฟล์
     def __get_file_name(self, full_parth):
         p = re.compile("/?.+/(.+)$")
         return p.match(full_parth).groups()[0]
 
+    # อัพโหลดไฟล์
     def __upload_and_overwrite(self, local_file_path, nhso_file_path, retry=3):
-        self.__check_deep(retry)
+        self.__check_over_retry(retry)
         self.__auth()  # ใส่ไว้เลย เพราะเป็น fun ที่ช้า
         api_url = self.base_url + "/v1/" + nhso_file_path + "?op=CREATE"
         print(api_url + " deep:" + str(retry))
